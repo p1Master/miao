@@ -1,25 +1,13 @@
 <template>
     <div class="movie_body">
         <ul>
-            <li>
-                <div class="pic_show"><img src="/images/ftfb4.jpg"></div>
+            <li v-for="item in comingList" :key="item.id">
+                <div class="pic_show"><img :src="item.img | setWH('128.180')"></div>
                 <div class="info_list">
-                    <h2>反贪风暴4</h2>
-                    <p><span class="person">22221</span> 人想看</p>
-                    <p>主演：古天乐,郑嘉颖,林峯,林家栋</p>
-                    <p>2019-04-04上映</p>
-                </div>
-                <div class="btn_pre">
-                    预售
-                </div>
-            </li>
-            <li>
-                <div class="pic_show"><img src="/images/tys.jpg"></div>
-                <div class="info_list">
-                    <h2>调音师</h2>
-                    <p><span class="person">15649</span> 人想看</p>
-                    <p>主演：阿尤斯曼·库拉纳,塔布,拉迪卡·艾普特,安尔·德霍万</p>
-                    <p>2019-04-03上映</p>
+                    <h2>{{item.nm}} <img v-if="item.version" src="@/assets/maxs.png"></h2>
+                    <p><span class="person">{{item.wish}}</span> 人想看</p>
+                    <p>主演：{{item.star}}</p>
+                    <p>{{item.rt}}上映</p>
                 </div>
                 <div class="btn_pre">
                     预售
@@ -31,7 +19,20 @@
 
 <script>
     export default {
-        name: "CommingSoon"
+        name: "CommingSoon",
+        data(){
+            return {
+                comingList:[]
+            }
+        },
+        mounted(){
+            this.axios.get('/api/movieComingList?cityId=10').then((res)=>{
+                var msg = res.data.msg;
+                if ( msg ==='ok' ){
+                    this.comingList = res.data.data.comingList;
+                }
+            })
+        }
     }
 </script>
 
