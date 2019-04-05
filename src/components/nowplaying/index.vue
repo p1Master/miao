@@ -1,8 +1,11 @@
 <template>
     <div class="movie_body">
+        <Loading v-if="isLoading" />
+        <Scroller v-else :handleToScroll="handleToScroll" :handleTotouchEnd="handleTotouchEnd">
         <ul>
+            <li class="pullDown">{{ pullDownMsg }}</li>
             <li v-for="item in movieList" :key="item.id">
-                <div class="pic_show"><img :src="item.img | setWH('128.180')"></div>
+                <div class="pic_show" @tap="handleToDetail"><img :src="item.img | setWH('128.180')"></div>
                 <div class="info_list">
                     <h2>{{item.nm}} <img v-if="item.version" src="@/assets/maxs.png"></h2>
                     <p>观众评 <span class="grade">{{item.sc}}</span></p>
@@ -14,6 +17,7 @@
                 </div>
             </li>
         </ul>
+        </Scroller>
     </div>
 </template>
 
@@ -22,16 +26,49 @@
         name: "NowPlaying",
         data(){
             return {
-                movieList:[]
+                movieList:[],
+                pullDownMsg:'',
+                isLoading:true,
+                prevCityId:-1
             }
         },
-        mounted() {
-            this.axios.get('/api/movieOnInfoList?cityId=10').then((res)=>{
+        activated() {
+            var CityId = this.$store.state.City.id;
+            if (this.prevCityId === CityId){return;}
+            this.isLoading = true;
+            this.axios.get('/api/movieOnInfoList?cityId='+CityId).then((res)=>{
                 var msg = res.data.msg;
                 if (msg === 'ok'){
                     this.movieList = res.data.data.movieList;
+                    this.isLoading = false;
+                    this.prevCityId = CityId;
                 }
             })
+        },
+        methods:{
+            handleToDetail(){
+                console.log('1');
+            },
+            handleToScroll(pos){
+                if (pos.y>25){
+                    this.pullDownMsg = '正在更新中';
+                }
+            },
+            handleTotouchEnd(pos){
+                if(pos.y>25){
+                    var CityId = this.$store.state.City.id;
+                    this.axios.get('/api/movieOnInfoList?cityId='+CityId).then((res)=>{
+                        var msg = res.data.msg;
+                        if (msg ==='ok'){
+                            this.pullDownMsg = '更新成功';
+                            setTimeout(()=>{
+                                this.movieList = res.data.data.movieList;
+                                this.pullDownMsg = '';
+                            },1000)
+                        }
+                    })
+                }
+            }
         }
     }
 </script>

@@ -1,5 +1,7 @@
 <template>
     <div class="cinema_body">
+        <Loading v-if="isLoading" />
+        <Scroller v-else>
         <ul>
             <li v-for="item in cniemaList" :key="item.id">
                 <div>
@@ -15,6 +17,7 @@
                 </div>
             </li>
         </ul>
+        </Scroller>
     </div>
 </template>
 
@@ -23,15 +26,21 @@
         name: "Cilist",
         data(){
             return {
-                cniemaList:[]
+                cniemaList:[],
+                isLoading:true,
+                prevCityId:-1
             }
         },
-        mounted() {
-            this.axios.get('/api/cinemaList?cityId=10').then((res)=>{
+        activated() {
+            var CityId = this.$store.state.City.id;
+            if (this.prevCityId === CityId){return;}
+            this.isLoading = true;
+            this.axios.get('/api/cinemaList?cityId='+CityId).then((res)=>{
                 var msg = res.data.msg;
                 if (msg === 'ok'){
                     this.cniemaList = res.data.data.cinemas;
-                    console.log(this.cniemaList);
+                    this.isLoading = false;
+                    this.prevCityId = CityId;
                 }
             })
         },
