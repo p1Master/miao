@@ -1,6 +1,9 @@
 <template>
-    <div class="movie_body">
+    <div class="movie_body" ref="movie_body">
+        <Loading v-if="isLoading" />
+        <Scroller v-else :handleToScroll="handleToScroll" :handleTotouchEnd="handleTotouchEnd">
         <ul>
+            <li class="pullDown">{{pullDownMsg}}</li>
             <li v-for="item in comingList" :key="item.id">
                 <div class="pic_show"><img :src="item.img | setWH('128.180')"></div>
                 <div class="info_list">
@@ -14,6 +17,7 @@
                 </div>
             </li>
         </ul>
+        </Scroller>
     </div>
 </template>
 
@@ -22,16 +26,46 @@
         name: "CommingSoon",
         data(){
             return {
-                comingList:[]
+                comingList:[],
+                pullDownMsg:'',
+                isLoading:true,
+                prevCityId:-1
             }
         },
-        mounted(){
-            this.axios.get('/api/movieComingList?cityId=10').then((res)=>{
+        activated(){
+            var CityId = this.$store.state.City.id;
+            if (this.prevCityId === CityId){return;}
+            this.isLoading = true;
+            this.axios.get('/api/movieComingList?cityId='+CityId).then((res)=>{
                 var msg = res.data.msg;
                 if ( msg ==='ok' ){
                     this.comingList = res.data.data.comingList;
+                    this.isLoading = false;
+                    this.prevCityId = CityId;
                 }
             })
+        },
+        methods:{
+            handleToScroll(pos){
+                if (pos.y>25){
+                    this.pullDownMsg = '正在更新中';
+                }
+            },
+            handleTotouchEnd(pos){
+                if(pos.y>25){
+                    var CityId = this.$store.state.City.id;
+                    this.axios.get('/api/movieComingList?cityId='+CityId).then((res)=>{
+                        var msg = res.data.msg;
+                        if (msg ==='ok'){
+                            this.pullDownMsg = '更新成功';
+                            setTimeout(()=>{
+                                this.movieList = res.data.data.comingList;
+                                this.pullDownMsg = '';
+                            },1000)
+                        }
+                    })
+                }
+            }
         }
     }
 </script>
